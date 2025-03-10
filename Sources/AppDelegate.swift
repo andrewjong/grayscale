@@ -22,6 +22,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var currentApplicationBundleIdentifier: String? { currentApplication.bundleIdentifier }
     var defaultGrayscaleEnabled: Bool = false
     var perAppGrayscaleEnabledDict: [String: Bool] = [:]
+    var temporaryTimer: Timer?
+    var temporaryEndDate: Date?
 
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         grayscaleLog("")
@@ -32,6 +34,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         createUI()
         updateUI()
+        
+        // Start a timer to update the UI every 30 seconds to keep the remaining time display accurate
+        Timer.scheduledTimer(withTimeInterval: 30.0, repeats: true) { [weak self] _ in
+            self?.updateUI()
+        }
 
         MASShortcutBinder.shared().bindShortcut(withDefaultsKey: grayscaleShortcutName, toAction: toggleDefaultGrayscale)
 
@@ -41,6 +48,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationWillTerminate(_ aNotification: Notification) {
         grayscaleLog("")
+
+        // Clean up temporary timer
+        temporaryTimer?.invalidate()
+        temporaryTimer = nil
+        temporaryEndDate = nil
 
         setGrayscale(defaultGrayscaleEnabled)
 
@@ -112,9 +124,66 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     // user interface
 
+    @objc func temporaryMenuClick(_ sender: NSMenuItem) {
+        guard let minutes = sender.representedObject as? Int else { return }
+        
+        // Cancel any existing temporary timer
+        temporaryTimer?.invalidate()
+        temporaryTimer = nil
+        temporaryEndDate = nil
+        
+        let currentState = grayscaleEnabled()
+        let newState = !currentState
+        
+        // Set the end date and create a timer
+        temporaryEndDate = Date().addingTimeInterval(TimeInterval(minutes * 60))
+        temporaryTimer = Timer.scheduledTimer(withTimeInterval: TimeInterval(minutes * 60), repeats: false) { [weak self] _ in
+            self?.temporaryTimerExpired()
+        }
+        
+        // Set the new state
+        setGrayscale(newState)
+        updateUI()
+    }
+    
+    func temporaryTimerExpired() {
+        temporaryTimer?.invalidate()
+        temporaryTimer = nil
+        temporaryEndDate = nil
+        
+        // Restore the previous state
+        if let bundleIdentifier = currentApplicationBundleIdentifier,
+           let appSpecificEnableGrayscale = perAppGrayscaleEnabledDict[bundleIdentifier] {
+            setGrayscale(appSpecificEnableGrayscale)
+        } else {
+            setGrayscale(defaultGrayscaleEnabled)
+        }
+        
+        updateUI()
+    }
+
     func updateUI() {
         defaultGrayscaleMenuItem.title = defaultGrayscaleEnabled ? "Grayscale Default: Enabled" : "Grayscale Default: Disabled"
         appSpecificMenuItem.title = currentApplication.localizedName!
+        
+        // Update temporary menu
+        let currentState = grayscaleEnabled()
+        temporaryMenuItem.title = "Temporary"
+        if let endDate = temporaryEndDate {
+            let minutes = Int(endDate.timeIntervalSinceNow / 60)
+            if minutes > 0 {
+                temporaryMenuItem.title = "Temporary (\(minutes) min remaining)"
+            }
+        }
+        
+        // Enable/disable temporary options based on current state
+        for item in temporarySubMenu.items {
+            if currentState {
+                item.title = "Disable for \(item.representedObject as! Int) Minutes"
+            } else {
+                item.title = "Enable for \(item.representedObject as! Int) Minutes"
+            }
+        }
 
         if let bundleIdentifier = currentApplicationBundleIdentifier,
            let appSpecificEnableGrayscale = perAppGrayscaleEnabledDict[bundleIdentifier] {
@@ -137,6 +206,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var statusItem: NSStatusItem!
     var statusMenu: NSMenu!
     var defaultGrayscaleMenuItem: NSMenuItem!
+    var temporaryMenuItem: NSMenuItem!
+    var temporarySubMenu: NSMenu!
     var appSpecificMenuItem: NSMenuItem!
     var appSpecificSubMenuItemGrayscaleDefault: NSMenuItem!
     var appSpecificSubMenuItemGrayscaleDisabled: NSMenuItem!
@@ -161,6 +232,21 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         defaultGrayscaleMenuItem = NSMenuItem(title: "Grayscale Default", action: nil, keyEquivalent: "")
         statusMenu.addItem(defaultGrayscaleMenuItem)
+
+        temporaryMenuItem = NSMenuItem(title: "Temporary", action: nil, keyEquivalent: "")
+        temporarySubMenu = NSMenu()
+        let durations = [(5, "5 Minutes"), (10, "10 Minutes"), (15, "15 Minutes"), 
+                        (30, "30 Minutes"), (60, "1 Hour")]
+        
+        for (minutes, title) in durations {
+            let item = NSMenuItem(title: title, action: #selector(temporaryMenuClick(_:)), keyEquivalent: "")
+            item.representedObject = minutes
+            temporarySubMenu.addItem(item)
+        }
+        
+        temporaryMenuItem.submenu = temporarySubMenu
+        statusMenu.addItem(temporaryMenuItem)
+        statusMenu.addItem(NSMenuItem.separator())
 
         appSpecificMenuItem = NSMenuItem(title: "App Name", action: nil, keyEquivalent: "")
         appSpecificSubMenuItemGrayscaleDefault = NSMenuItem(title: "Default",  action: #selector(appSpecificMenuClick(_:)), keyEquivalent: "")
