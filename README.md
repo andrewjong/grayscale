@@ -15,7 +15,7 @@ Using the grayscale filter can help you reduce your screen time. For more inform
 
 ## Using grayscale
 
-`grayscale` enables or disables grayscale mode based on the active application. It stores a default grayscale value, which determines whether grayscale mode should be on or off for all applications that have not overridden it. To toggle the default value, you can left click the status bar icon or use a keyboard shortcut. Right-clicking the icon brings up a menu, which allows you to view the default value, override it for the active application, and configure the keyboard shortcut.
+`grayscale` enables or disables grayscale mode based on the active application. It stores a default grayscale value, which determines whether grayscale mode should be on or off for all applications that have not overridden it. To toggle the default value, you can left click the status bar icon or use a keyboard shortcut. Right-clicking the icon brings up a menu, which allows you to view the default value, override it for the active application, configure the keyboard shortcut, and enable grayscale at system startup.
 
 `grayscale` is designed to make using grayscale mode practical. It's not realistic to keep your screen in grayscale all the time, and automatic transitions reduce the burden of manually turning it on and off. I recommend enabling grayscale by default and disabling it for specific applications that benefit from colors but don't use them to capture your attention, like a text editor with syntax highlighting. Potentially addictive applications that sometimes need color, like web browsers, can then be used with the default setting (i.e. with grayscale enabled), and you can use the keyboard shortcut to toggle grayscale as necessary.
 
@@ -43,3 +43,5 @@ Clone this git repository using `git clone --recurse-submodules` and run `make` 
 
 Automatically open `grayscale` at login by adding it to the list in System Settings > General > Login Items.
 See the [Apple support page](https://support.apple.com/guide/mac-help/open-items-automatically-when-you-log-in-mh15189/mac) if the location of the list has changed.
+
+You can also enable the "Enable Grayscale at Startup" option in the menu to automatically turn on grayscale when the app starts. This is particularly useful when combined with opening at login, as it will ensure your screen starts in grayscale mode when you log in to your Mac.
