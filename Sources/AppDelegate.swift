@@ -12,6 +12,7 @@ import Carbon
 // user defaults keys
 let grayscaleShortcutName = "grayscale_shortcut"
 let perAppGrayscaleEnabledDictName = "grayscale_dict"
+let enableGrayscaleOnStartupName = "enable_grayscale_on_startup"
 
 @NSApplicationMain
 class AppDelegate: NSObject, NSApplicationDelegate {
@@ -22,6 +23,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var currentApplicationBundleIdentifier: String? { currentApplication.bundleIdentifier }
     var defaultGrayscaleEnabled: Bool = false
     var perAppGrayscaleEnabledDict: [String: Bool] = [:]
+    var enableGrayscaleOnStartup: Bool = false
 
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         grayscaleLog("")
@@ -29,6 +31,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         defaultGrayscaleEnabled = grayscaleEnabled()
         currentApplication = NSWorkspace.shared.frontmostApplication!
         perAppGrayscaleEnabledDict = UserDefaults.standard.dictionary(forKey: perAppGrayscaleEnabledDictName) as? [String: Bool] ?? [:]
+        enableGrayscaleOnStartup = UserDefaults.standard.bool(forKey: enableGrayscaleOnStartupName)
+
+        // Enable grayscale on startup if the preference is set and grayscale is currently disabled
+        if enableGrayscaleOnStartup && !grayscaleEnabled() {
+            grayscaleLog("enabling grayscale on startup")
+            enableGrayscale()
+            defaultGrayscaleEnabled = true
+        }
 
         createUI()
         updateUI()
@@ -97,6 +107,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         updateUI()
     }
 
+    @objc func toggleEnableGrayscaleOnStartup(_ sender: Any) {
+        enableGrayscaleOnStartup = !enableGrayscaleOnStartup
+        UserDefaults.standard.set(enableGrayscaleOnStartup, forKey: enableGrayscaleOnStartupName)
+        grayscaleLog("toggled enable grayscale on startup to \(enableGrayscaleOnStartup)")
+        updateUI()
+    }
+
     @objc func statusBarButtonClick(_ sender: Any) {
         let event = NSApp.currentEvent!
         if event.type == NSEvent.EventType.leftMouseUp {
@@ -114,6 +131,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func updateUI() {
         defaultGrayscaleMenuItem.title = defaultGrayscaleEnabled ? "Grayscale Default: Enabled" : "Grayscale Default: Disabled"
+        enableGrayscaleOnStartupMenuItem.state = enableGrayscaleOnStartup ? .on : .off
         appSpecificMenuItem.title = currentApplication.localizedName!
 
         if let bundleIdentifier = currentApplicationBundleIdentifier,
@@ -137,6 +155,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var statusItem: NSStatusItem!
     var statusMenu: NSMenu!
     var defaultGrayscaleMenuItem: NSMenuItem!
+    var enableGrayscaleOnStartupMenuItem: NSMenuItem!
     var appSpecificMenuItem: NSMenuItem!
     var appSpecificSubMenuItemGrayscaleDefault: NSMenuItem!
     var appSpecificSubMenuItemGrayscaleDisabled: NSMenuItem!
@@ -161,6 +180,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         defaultGrayscaleMenuItem = NSMenuItem(title: "Grayscale Default", action: nil, keyEquivalent: "")
         statusMenu.addItem(defaultGrayscaleMenuItem)
+
+        enableGrayscaleOnStartupMenuItem = NSMenuItem(title: "Enable Grayscale on Startup", action: #selector(toggleEnableGrayscaleOnStartup(_:)), keyEquivalent: "")
+        statusMenu.addItem(enableGrayscaleOnStartupMenuItem)
+        statusMenu.addItem(NSMenuItem.separator())
 
         appSpecificMenuItem = NSMenuItem(title: "App Name", action: nil, keyEquivalent: "")
         appSpecificSubMenuItemGrayscaleDefault = NSMenuItem(title: "Default",  action: #selector(appSpecificMenuClick(_:)), keyEquivalent: "")

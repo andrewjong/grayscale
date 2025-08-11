@@ -15,9 +15,20 @@ Using the grayscale filter can help you reduce your screen time. For more inform
 
 ## Using grayscale
 
-`grayscale` enables or disables grayscale mode based on the active application. It stores a default grayscale value, which determines whether grayscale mode should be on or off for all applications that have not overridden it. To toggle the default value, you can left click the status bar icon or use a keyboard shortcut. Right-clicking the icon brings up a menu, which allows you to view the default value, override it for the active application, and configure the keyboard shortcut.
+`grayscale` enables or disables grayscale mode based on the active application. It stores a default grayscale value, which determines whether grayscale mode should be on or off for all applications that have not overridden it. To toggle the default value, you can left click the status bar icon or use a keyboard shortcut. Right-clicking the icon brings up a menu, which allows you to view the default value, override it for the active application, configure the keyboard shortcut, and enable grayscale on startup.
 
 `grayscale` is designed to make using grayscale mode practical. It's not realistic to keep your screen in grayscale all the time, and automatic transitions reduce the burden of manually turning it on and off. I recommend enabling grayscale by default and disabling it for specific applications that benefit from colors but don't use them to capture your attention, like a text editor with syntax highlighting. Potentially addictive applications that sometimes need color, like web browsers, can then be used with the default setting (i.e. with grayscale enabled), and you can use the keyboard shortcut to toggle grayscale as necessary.
+
+### Enable Grayscale on Startup
+
+`grayscale` includes an option to automatically enable grayscale mode when the application starts, if it was previously disabled. This feature is useful if you want to ensure grayscale is always enabled when you start your computer, even if you disabled it during your previous session.
+
+To enable this feature:
+1. Right-click the grayscale status bar icon
+2. Click "Enable Grayscale on Startup" to toggle the preference
+3. A checkmark will appear when the feature is enabled
+
+When enabled, grayscale will automatically turn on when the app starts, but only if grayscale was previously disabled. If grayscale is already enabled when the app starts, this setting has no effect.
 
 ## Installing grayscale
 
